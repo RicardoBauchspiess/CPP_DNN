@@ -3,9 +3,12 @@ I wanted to experiment with the C++ API of PyTorch. At the time of writing this 
 
 # DataLoader
 
-Implemented class and functionalities related to loading dat.
+Implemented class and functionalities related to loading data.
 
 Created generic dataset loader class.
+
 Created CIFAR10 dataset loader class.
+
 Created subset random sampler class.
+
 Created data augmentation functions.
