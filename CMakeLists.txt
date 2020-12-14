@@ -10,7 +10,7 @@ include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-add_executable(cpptorch cifardata.cpp DataSet.hpp DataSet.cpp cifar10.h cifar10.cpp SubsetRandomSampler.hpp SubsetRandomSampler.cpp dataaugmentation.hpp dataaugmentation.cpp )
+add_executable(cpptorch example.cpp DataSet.hpp DataSet.cpp cifar10.h cifar10.cpp SubsetRandomSampler.hpp SubsetRandomSampler.cpp dataaugmentation.hpp dataaugmentation.cpp utils.hpp utils.cpp)
 target_link_libraries(cpptorch "${TORCH_LIBRARIES}")
 target_link_libraries( cpptorch ${OpenCV_LIBS}) # link OpenCV libraries , hightgui.so not found by cmake so this hack
 MESSAGE("OpenCV_LIBS: " ${OpenCV_LIBS} )  #display opencv libs found
