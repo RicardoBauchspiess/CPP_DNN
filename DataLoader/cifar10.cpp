@@ -75,6 +75,7 @@ CIFAR10::CIFAR10(const std::string& root, bool train)
 					reading = (bin_file.read(reinterpret_cast<char*>(label.data_ptr()), 1) &&
 						bin_file.read(reinterpret_cast<char*>(image.data_ptr()), image.numel()) );
 					image = image.to(torch::kFloat32).div_(255);
+					label = label.to(torch::kLong);
 					labels.push_back(label);
 					images.push_back(image);
 				} while (reading);

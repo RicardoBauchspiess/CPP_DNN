@@ -48,7 +48,7 @@ std::pair<torch::Tensor, torch::Tensor> SubsetRandomSampler::getBatch() {
     mSampleIdx = -1;
     generate(begin(mBatchLabels), end(mBatchLabels), mSampleLabel);
 
-    pair<torch::Tensor, torch::Tensor> batch(mTransforms(torch::stack(mBatchImages)),torch::stack(mBatchLabels));
+    pair<torch::Tensor, torch::Tensor> batch(mTransforms(torch::stack(mBatchImages)),torch::cat(mBatchLabels));
 
 
 
