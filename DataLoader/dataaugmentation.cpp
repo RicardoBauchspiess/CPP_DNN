@@ -87,3 +87,13 @@ std::function<torch::Tensor(torch::Tensor)> pad(torch::IntArrayRef pad, torch::S
 		//torch::nn::functional::pad(input, torch::nn::functional::PadFuncOptions({1,2,3}).mode(pad_mode));
 	};
 }
+
+/** Normalize
+ *	\brief normalize tensor
+ *
+ */
+std::function<torch::Tensor(torch::Tensor)> normalize(std::vector<double> mean, std::vector<double> std ) {
+	return [mean, std](torch::Tensor input){
+		return torch::data::transforms::Normalize<>(mean, std)(input);
+	};
+}

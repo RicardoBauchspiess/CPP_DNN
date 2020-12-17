@@ -9,33 +9,35 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "opencv2/imgcodecs/imgcodecs.hpp"
 
+#include "dataaugmentation.hpp"
+
 #include <iostream>
 
 // Test set and Train set as singletons, so that the data won't be loaded multiple times
 class CIFAR10 : public DataSet {
 public:
-	static CIFAR10* trainData(const std::string& root) {
+	static CIFAR10* trainData(const std::string& root, std::function<torch::Tensor(torch::Tensor)> transforms = Compose({})) {
         static CIFAR10 *mTrainInstance = 0;
         if(mTrainInstance == 0)
         {
-            mTrainInstance = new CIFAR10(root, true);
+            mTrainInstance = new CIFAR10(root, true, transforms);
         }
         return mTrainInstance;
     }
 
-    static CIFAR10* testData(const std::string& root) {
+    static CIFAR10* testData(const std::string& root, std::function<torch::Tensor(torch::Tensor)> transforms = Compose({})) {
         static CIFAR10 *mTestInstance = 0;
         if(mTestInstance == 0)
         {
-            mTestInstance = new CIFAR10(root, false);
+            mTestInstance = new CIFAR10(root, false, transforms);
         }
         return mTestInstance;
     }
 
 private:
 
-	CIFAR10(const std::string& root, bool train);
-
+	CIFAR10(const std::string& root, bool train, std::function<torch::Tensor(torch::Tensor)> transforms);
+ 
 
 
 };

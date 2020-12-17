@@ -6,8 +6,7 @@
 using namespace std;
 using namespace torch;
 
-
-CIFAR10::CIFAR10(const std::string& root, bool train)
+CIFAR10::CIFAR10(const std::string& root, bool train, std::function<torch::Tensor(torch::Tensor)> transforms)
 {
 	const int ImageRows = 32;
 	const int ImageCols = 32;
@@ -63,21 +62,29 @@ CIFAR10::CIFAR10(const std::string& root, bool train)
 				cout << "CIFAR10 files already downloaded" << endl;
 			}
 
+
 			for (auto file : train_file) {
 				const auto path = root + file;
 				std::ifstream bin_file(path, std::ios::binary);
 				TORCH_CHECK(bin_file, "Error opening images file at ", path);
 
 				bool reading = true;
+				int k = 0;	
 				do {
 					auto label = torch::empty(1, torch::kByte);
 					auto image = torch::empty({ ImageChannels, ImageRows, ImageCols}, torch::kByte);
 					reading = (bin_file.read(reinterpret_cast<char*>(label.data_ptr()), 1) &&
 						bin_file.read(reinterpret_cast<char*>(image.data_ptr()), image.numel()) );
-					image = image.to(torch::kFloat32).div_(255);
+					image = transforms(image.to(torch::kFloat32).div_(255));
 					label = label.to(torch::kLong);
-					labels.push_back(label);
-					images.push_back(image);
+					// Remove invalid samples
+					if ( (label[0].item<long>() > 9) || (label[0].item<long>()< 0) || (k == 10000) ) {
+						//cout << "Error label:  " << label << "    " << k << endl;
+					} else {
+						labels.push_back(label);
+						images.push_back(image);
+					}
+					k++;
 				} while (reading);
 			}
 			cout << labels.size() << "   "  << images.size() << endl;

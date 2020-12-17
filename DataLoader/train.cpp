@@ -32,33 +32,56 @@ int main(int argc, char **argv) {
 	int iterations = epoch_iter*epochs;
 
 	// training data
-	DataSet* CIFAR10Data = CIFAR10::trainData(argv[1]);
+	auto data_transforms = Compose({normalize({0.485, 0.456, 0.406}, {0.229, 0.224, 0.225}), pad({4,4,4,4},0)});
+	DataSet* CIFAR10Data = CIFAR10::trainData("/home/ricardo/Área de Trabalho/Ricardo/cpptorch/Data"/*argv[1]*/,data_transforms);
 	vector<int> idx(CIFAR10Data->numSamples());
 	std::iota(begin(idx),end(idx),0);
-	auto transforms = Compose({pad({4,4,4,4},0), randomCrop(32,32), randomHorizontalFlip(0.5)});
-	SubsetRandomSampler sampler(idx, CIFAR10Data, batch_size, transforms);
+	auto sampler_transforms = Compose({randomCrop(32,32), randomHorizontalFlip(0.5)});
+	SubsetRandomSampler sampler(idx, CIFAR10Data, batch_size, sampler_transforms);
 
 	// model	
 	auto net = std::make_shared<Net>();
 	net->to(torch::kCUDA);
 	
 	// optimizer
-	optim::SGD optimizer(net->parameters(), /*lr=*/0.01);
+	optim::SGD optimizer(net->parameters(), torch::optim::SGDOptions(0.2).momentum(0.9).weight_decay(0.0001).nesterov(true) );
 
-	for (int i = 0; i < iterations; i++) {
-		optimizer.zero_grad();
-		auto batch = sampler.getBatch();
-		auto images = batch.first.to(at::kCUDA);
-		auto target = batch.second.to(at::kCUDA);
+	for (int i = 0; i < epochs; i++) {
+		float num_samples = 0;
+		float correct = 0;
+		for (int j = 0;  j < epoch_iter; j++) {
+			optimizer.zero_grad();
+			auto batch = sampler.getBatch();
+			auto images = batch.first.to(at::kCUDA);
+			auto target = batch.second.to(at::kCUDA);	
+			auto prediction = net->forward(images);
 		
-		auto prediction = net->forward(images);
+			// Cross entropy loss
+			auto loss = nll_loss(log_softmax(prediction,1), target);
+			if (i > 0) {
+				loss.backward();
+				optimizer.step();
+			}
+			
+
+			// Calculate accuracy
+			auto vals = torch::argmax(prediction, 1);
+			int k = 0;
+			for (k = 0; k < vals.size(0); k++) {
+				//cout << k << endl;
+				if (vals[k].item<long>() == (int)target[k].item<long>()) {
+					correct += 1;
+				}
+			}
+			num_samples += (float)k;
+			
+
+		}
+		cout << "Epoch " << i << ":  " << 100.0*correct/(num_samples+0.000001) << " percent correct" << endl;
 		
-		// Cross entropy loss
-		auto loss = nll_loss(log_softmax(prediction,1), target);
-		loss.backward();
-		optimizer.step();
 		torch::save(net,"net.pt");
-		cout << "Loss: " << loss.item<float>() << endl;
+		torch::save(optimizer, "optimizer.pt");
+		//cout << "Loss: " << loss.item<float>() << endl;
 		
 	}
 
